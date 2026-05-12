@@ -14,7 +14,7 @@ public class ItemDaoImpl implements ItemDao {
     private static final Logger logger = LogManager.getLogger(ItemDaoImpl.class);
     private static ItemDaoImpl instance = new ItemDaoImpl();
 
-    private static final String ADD_ITEM = "INSERT INTO items (name, description, owner_id) VALUES (?, ?, ?)";
+    private static final String ADD_ITEM = "INSERT INTO items (name, description) VALUES (?, ?)";
     private static final String DELETE_ITEM = "DELETE FROM items WHERE id = ?";
 
     private ItemDaoImpl() {}
@@ -24,7 +24,7 @@ public class ItemDaoImpl implements ItemDao {
     }
 
     @Override
-    public boolean addItem(String name, String description, Long ownerId) throws DaoException {
+    public boolean addItem(String name, String description) throws DaoException {
         logger.info("Adding new item: {}", name);
         ConnectionPool connectionPool = ConnectionPool.getInstance();
         Connection connection = connectionPool.getConection();
@@ -32,7 +32,6 @@ public class ItemDaoImpl implements ItemDao {
         try (PreparedStatement statement = connection.prepareStatement(ADD_ITEM)) {
             statement.setString(1, name);
             statement.setString(2, description);
-            statement.setLong(3, ownerId);
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             throw new DaoException(e);

@@ -13,7 +13,7 @@ import org.partapp.kicktask4.service.impl.ItemServiceImpl;
 
 public class DeleteItemCommand implements Command {
     private static final Logger logger = LogManager.getLogger(DeleteItemCommand.class);
-    private static final String ITEMS_PAGE = "pages/user/items.jsp";
+    private static final String ITEMS_PAGE = "pages/item/items.jsp";
 
     @Override
     public Router execute(HttpServletRequest request) throws CommandException {

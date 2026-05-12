@@ -33,24 +33,14 @@ public class AddItemCommand implements Command {
             return router;
         }
 
-        Long ownerId = (Long) session.getAttribute("userId");
-        if (ownerId == null) {
-            logger.error("UserId not found in session");
-            Router router = new Router();
-            router.setPage(ADD_ITEM_PAGE);
-            router.setForward();
-            request.setAttribute("error_msg", "User ID not found");
-            return router;
-        }
-
         ItemService itemService = ItemServiceImpl.getInstance();
         Router router = new Router();
 
         try {
-            boolean success = itemService.addItem(name, description, ownerId);
+            boolean success = itemService.addItem(name, description);
 
             if (success) {
-                logger.info("Item added successfully: {} by owner {}", name, ownerId);
+                logger.info("Item added successfully: {} by owner {}", name);
                 request.setAttribute("success_msg", "Item added successfully");
                 router.setPage(ITEMS_PAGE);
                 router.setRedirect();

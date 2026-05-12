@@ -18,22 +18,17 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public boolean addItem(String name, String description, Long ownerId) throws ServiceException {
-        logger.info("Item service - add item for owner: {}", ownerId);
+    public boolean addItem(String name, String description) throws ServiceException {
+        logger.info("Item service - add item for owner: {}");
 
         if (name == null || name.trim().isEmpty()) {
             logger.warn("Item name is empty");
             return false;
         }
 
-        if (ownerId == null || ownerId <= 0) {
-            logger.warn("Invalid owner id");
-            return false;
-        }
-
         ItemDaoImpl itemDao = ItemDaoImpl.getInstance();
         try {
-            return itemDao.addItem(name, description, ownerId);
+            return itemDao.addItem(name, description);
         } catch (DaoException e) {
             throw new ServiceException(e);
         }
