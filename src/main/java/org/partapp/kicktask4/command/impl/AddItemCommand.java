@@ -11,6 +11,8 @@ import org.partapp.kicktask4.exception.ServiceException;
 import org.partapp.kicktask4.service.ItemService;
 import org.partapp.kicktask4.service.impl.ItemServiceImpl;
 
+import static org.partapp.kicktask4.config.Constants.USER;
+
 public class AddItemCommand implements Command {
     private static final Logger logger = LogManager.getLogger(AddItemCommand.class);
     private static final String ITEMS_PAGE = "pages/user/items.jsp";
@@ -18,12 +20,12 @@ public class AddItemCommand implements Command {
 
     @Override
     public Router execute(HttpServletRequest request) throws CommandException {
-        logger.info("AddItemCommand execution");
+        logger.debug("AddItemCommand execution");
 
         String name = request.getParameter("itemName");
         String description = request.getParameter("itemDescription");
         HttpSession session = request.getSession();
-        String username = (String) session.getAttribute("user");
+        String username = (String) session.getAttribute(USER);
 
         if (username == null) {
             logger.warn("Unauthorized attempt to add item");
@@ -37,7 +39,7 @@ public class AddItemCommand implements Command {
         Router router = new Router();
 
         try {
-            boolean success = itemService.addItem(name, description);
+            boolean success = itemService.addItem(name, description, username);
 
             if (success) {
                 logger.info("Item added successfully: {} by owner {}", name);

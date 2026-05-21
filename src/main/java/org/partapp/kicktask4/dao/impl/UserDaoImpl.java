@@ -15,7 +15,7 @@ import java.util.List;
 
 public class UserDaoImpl extends BaseDao<UserEntity> implements UserDao {
     private static final Logger logger = LogManager.getLogger(UserDaoImpl.class);
-    private static final String SELECT_PASSWORD_FROM_USERS_WHERE_USERNAME = "SELECT password FROM users WHERE username = ?";
+    private static final String SELECT_USER_BY_NAME = "SELECT * FROM users WHERE username = ?";
     private static final String USER_EXISTS = "SELECT EXISTS (SELECT 1 FROM users WHERE username = ?)";
     private static final String ADD_USER = "INSERT INTO users (username, password) VALUES (?, ?)";
     private static UserDaoImpl instance = new UserDaoImpl();
@@ -25,11 +25,6 @@ public class UserDaoImpl extends BaseDao<UserEntity> implements UserDao {
 
     public static UserDaoImpl getInstance() {
         return instance;
-    }
-
-    @Override
-    public boolean insert(UserEntity userEntity) {
-        return false;
     }
 
     @Override
@@ -48,52 +43,51 @@ public class UserDaoImpl extends BaseDao<UserEntity> implements UserDao {
     }
 
     @Override
-    public boolean authenticate(String username, String password) throws DaoException {
+    public UserEntity findByName(String username) throws DaoException {
         logger.info("User DAO authenticate");
-        ConnectionPool connectionPool = ConnectionPool.getInstance();
-        Connection connection = connectionPool.getConection();
-        boolean match = false;
-        try (PreparedStatement statement = connection.prepareStatement(SELECT_PASSWORD_FROM_USERS_WHERE_USERNAME)) {
+        try (Connection connection = ConnectionPool.getInstance().getConection();
+             PreparedStatement statement = connection.prepareStatement(SELECT_USER_BY_NAME)) {
 
             statement.setString(1, username);
             ResultSet resultSet = statement.executeQuery();
-            List<UserEntity> users = new ArrayList<>();
-            String passFromDb;
+            UserEntity user = new UserEntity();
             if (resultSet.next()) {
-                passFromDb = resultSet.getString("password");
-                match = password.equals(passFromDb);
+                user = new UserEntity(
+                        resultSet.getLong("id"),
+                        resultSet.getString("username"),
+                        resultSet.getString("password"),
+                        resultSet.getBoolean("isAdmin")
+                );
             }
-            return match;
+            return user;
         } catch (SQLException e) {
+            logger.error("Error finding user: {}. {}", username, e);
             throw new DaoException(e);
-        } finally {
-            connectionPool.releaseConnection(connection);
         }
     }
 
-    public boolean registerUser(String username, String password) throws DaoException {
-        logger.info("User DAO registration");
-        ConnectionPool connectionPool = ConnectionPool.getInstance();
-        Connection connection = connectionPool.getConection();
+
+    @Override
+    public boolean insert(UserEntity userEntity) throws DaoException {
+        logger.debug("User DAO registration with username: {}", userEntity.getUsername());
+
         boolean result = false;
-        try (PreparedStatement statement = connection.prepareStatement(ADD_USER)){
-            statement.setString(1, username);
-            statement.setString(2, password);
+        try (Connection connection = ConnectionPool.getInstance().getConection();
+             PreparedStatement statement = connection.prepareStatement(ADD_USER)) {
+            statement.setString(1, userEntity.getUsername());
+            statement.setString(2, userEntity.getPassword());
             int resultSet = statement.executeUpdate();
             return resultSet > 0;
         } catch (SQLException e) {
             throw new DaoException(e);
-        } finally {
-            connectionPool.releaseConnection(connection);
         }
     }
 
     public boolean userExists(String username) throws DaoException {
         logger.info("User DAO user exists");
-        ConnectionPool connectionPool = ConnectionPool.getInstance();
-        Connection connection = connectionPool.getConection();
         boolean exists = false;
-        try (PreparedStatement statement = connection.prepareStatement(USER_EXISTS)){
+        try (   Connection connection = ConnectionPool.getInstance().getConection();
+                PreparedStatement statement = connection.prepareStatement(USER_EXISTS)) {
 
             statement.setString(1, username);
             ResultSet resultSet = statement.executeQuery();
@@ -103,8 +97,6 @@ public class UserDaoImpl extends BaseDao<UserEntity> implements UserDao {
             return exists;
         } catch (SQLException e) {
             throw new DaoException(e);
-        } finally {
-            connectionPool.releaseConnection(connection);
         }
     }
 }

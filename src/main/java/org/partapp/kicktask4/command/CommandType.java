@@ -6,8 +6,10 @@ public enum CommandType {
     REGISTER(new RegisterCommand()),
     LOGIN(new LoginCommand()),
     LOGOUT(new LogoutCommand()),
+    DELETE_USER(new DeleteUserCommand()),
     ADD_ITEM(new AddItemCommand()),
     DELETE_ITEM(new DeleteItemCommand()),
+    UPDATE_ITEM(new UpdateItem()),
     GET_ALL_ITEMS(new GetAllItemsCommand());
     Command command;
 
