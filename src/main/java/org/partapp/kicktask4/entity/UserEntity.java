@@ -19,6 +19,13 @@ public class UserEntity {
         this.isAdmin = false;
     }
 
+    public UserEntity(Long id, String username, Boolean isAdmin) {
+        this.id = id;
+        this.username = username;
+        this.password = null;
+        this.isAdmin = isAdmin;
+    }
+
     public UserEntity(Long id, String username, String password, Boolean isAdmin) {
         this.id = id;
         this.username = username;
@@ -46,6 +53,9 @@ public class UserEntity {
         return isAdmin;
     }
 
+    public void setAdmin(Boolean admin) {
+        isAdmin = admin;
+    }
 
     public void setUsername(String username) {
         this.username = username;
@@ -77,5 +87,4 @@ public class UserEntity {
                 ", isAdmin=" + isAdmin +
                 '}';
     }
-
 }

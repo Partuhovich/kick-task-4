@@ -2,6 +2,7 @@ package org.partapp.kicktask4.connection;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.partapp.kicktask4.exception.ConnectionPoolException;
 
 import java.sql.*;
 import java.util.Properties;
@@ -10,14 +11,16 @@ import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static org.partapp.kicktask4.connection.param.ConnectionParameter.*;
+
 public class ConnectionPool {
     private static final Logger logger = LogManager.getLogger(ConnectionPool.class);
-    private static ConnectionPool instance;
     private static final int MAX_CONNECTIONS_CAPACITY = 10;
     private static final Lock lock = new ReentrantLock();
-    private final BlockingDeque<Connection> freeConections = new LinkedBlockingDeque<>(MAX_CONNECTIONS_CAPACITY);
-    private final BlockingDeque<Connection> usedConections = new LinkedBlockingDeque<>(MAX_CONNECTIONS_CAPACITY);
-    private final String URL = "jdbc:postgresql://localhost:5432/demodb";
+    private static final String URL = "jdbc:postgresql://localhost:5432/demodb";
+    private static ConnectionPool instance;
+    private final BlockingDeque<Connection> freeConnections = new LinkedBlockingDeque<>(MAX_CONNECTIONS_CAPACITY);
+    private final BlockingDeque<Connection> usedConnections = new LinkedBlockingDeque<>(MAX_CONNECTIONS_CAPACITY);
 
     static {
         try {
@@ -31,17 +34,18 @@ public class ConnectionPool {
     private ConnectionPool() {
         logger.info("Creating connection");
         Properties prop = new Properties();
-        prop.put("user", "postgres");
-        prop.put("password", "root");
+        prop.put(PARAM_USER, PARAM_POSTGRES);
+        prop.put(PARAM_PASSWORD, PARAM_ROOT);
         for (int i = 0; i < MAX_CONNECTIONS_CAPACITY; i++) {
             Connection connection = null;
             try {
                 connection = DriverManager.getConnection(URL, prop);
             } catch (SQLException e) {
+                logger.fatal("ConnectionPool failed");
                 throw new ExceptionInInitializerError(e);
             }
             logger.info("Creating connection number = {}", i + 1);
-            freeConections.add(connection);
+            freeConnections.add(connection);
         }
     }
 
@@ -59,34 +63,34 @@ public class ConnectionPool {
         return instance;
     }
 
-    public Connection getConection() {
+    public Connection getConnection() {
         Connection connection = null;
         try {
-            connection = freeConections.take();
-            usedConections.add(connection);
+            connection = freeConnections.take();
+            usedConnections.add(connection);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new RuntimeException(e);
+            throw new ConnectionPoolException(e);
         }
         return connection;
     }
 
     public void releaseConnection(Connection connection) {
         try {
-            usedConections.remove(connection);
-            freeConections.put(connection);
+            usedConnections.remove(connection);
+            freeConnections.put(connection);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new RuntimeException(e);
+            throw new ConnectionPoolException(e);
         }
     }
 
     public void destroyPool() {
         for(int i = 0; i < MAX_CONNECTIONS_CAPACITY; i++){
             try {
-                freeConections.take().close();
+                freeConnections.take().close();
             } catch (SQLException | InterruptedException e) {
-                throw new RuntimeException(e);
+                throw new ConnectionPoolException(e);
             }
         }
     }

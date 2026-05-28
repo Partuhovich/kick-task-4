@@ -1,46 +1,38 @@
-<%--
-  Created by IntelliJ IDEA.
-  User: User
-  Date: 12.05.2026
-  Time: 18:49
-  To change this template use File | Settings | File Templates.
---%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <html>
 <head>
-    <title>Title</title>
+  <title>Add Item</title>
 </head>
 <body>
-<div class="container">
-  <h1>Add New Item</h1>
-  <hr/>
+<h1>Add New Item</h1>
 
-  <form action="${pageContext.request.contextPath}/controller" method="post">
-    <input type="hidden" name="command" value="addItem"/>
+<c:if test="${not empty error_msg}">
+  <div style="color: red;">${error_msg}</div>
+</c:if>
 
-    <div class="form-group">
-      <label>Item Name:</label>
-      <input type="text" name="itemName" required/>
-    </div>
+<c:if test="${not empty success_msg}">
+  <div style="color: green;">${success_msg}</div>
+</c:if>
 
-    <div class="form-group">
-      <label>Description:</label>
-      <textarea name="itemDescription" rows="5" cols="40"></textarea>
-    </div>
+<hr/>
 
-    <div class="form-group">
-      <span class="error">${error_msg}</span>
-      <span class="success">${success_msg}</span>
-    </div>
+<form action="${pageContext.request.contextPath}/controller" method="post">
+  <input type="hidden" name="command" value="add_item"/>
 
-    <button type="submit">Add Item</button>
-    <button type="button" onclick="location.href='${pageContext.request.contextPath}/pages/user/items.jsp'">Cancel</button>
-  </form>
+  <label for="itemName">Item Name:</label>
+  <input type="text" id="itemName" name="itemName" required="required"/>
+  <br/><br/>
 
-  <hr/>
-  <a href="${pageContext.request.contextPath}/pages/user/items.jsp">Back to Items</a>
-  <br/>
-  <a href="${pageContext.request.contextPath}/index.jsp">Home</a>
-</div>
+  <label for="itemDescription">Description:</label><br/>
+  <textarea id="itemDescription" name="itemDescription" rows="5" cols="40"></textarea>
+  <br/><br/>
+
+  <input type="submit" value="Add Item"/>
+  <input type="button" value="Cancel" onclick="window.location.href='${pageContext.request.contextPath}/controller?command=get_all_items'"/>
+</form>
+
+<br/>
+<a href="${pageContext.request.contextPath}/controller?command=get_all_items">Back to Items</a>
 </body>
 </html>

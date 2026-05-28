@@ -9,19 +9,19 @@ import org.partapp.kicktask4.controller.router.Router;
 import org.partapp.kicktask4.entity.UserEntity;
 import org.partapp.kicktask4.exception.CommandException;
 import org.partapp.kicktask4.exception.ServiceException;
-import org.partapp.kicktask4.service.ItemService;
-import org.partapp.kicktask4.service.impl.ItemServiceImpl;
+import org.partapp.kicktask4.service.impl.UserServiceImpl;
+
+import java.util.List;
 
 import static org.partapp.kicktask4.command.impl.param.RequestParameter.*;
 
-public class DeleteItemCommand implements Command {
-    private static final Logger logger = LogManager.getLogger(DeleteItemCommand.class);
+public class GetAllUsersCommand implements Command {
+    private static final Logger logger = LogManager.getLogger(GetAllUsersCommand.class);
 
     @Override
     public Router execute(HttpServletRequest request) throws CommandException {
-        logger.debug("Delete Item Command execution");
-
-        String itemIdParam = request.getParameter(PARAM_ITEM_ID);
+        logger.debug("Get All Users Command execution");
+        UserServiceImpl userService = UserServiceImpl.getInstance();
         HttpSession session = request.getSession();
         UserEntity currentUser = (UserEntity) session.getAttribute(PARAM_USER);
         Router router = new Router();
@@ -33,22 +33,14 @@ public class DeleteItemCommand implements Command {
             return router;
         }
 
-        ItemService itemService = ItemServiceImpl.getInstance();
-        Long itemId = Long.parseLong(itemIdParam);
-
-        try {
-            if (itemService.deleteItem(itemId, currentUser)) {
-                logger.info("Item deleted successfully: {} by user {}", itemId, currentUser.getUsername());
-                request.setAttribute(PARAM_SUCCESS_MSG, "Item deleted successfully");
-            } else {
-                logger.warn("Failed to delete item: {}", itemId);
-                request.setAttribute(PARAM_ERROR_MSG, "Failed to delete item");
-            }
-
-            router.setPage(ITEMS_PAGE);
-            router.setRedirect();
+        try{
+            //todo isAdmin validation?
+            List<UserEntity> users = userService.getAllUsers(currentUser);
+            request.setAttribute(PARAM_USER_LIST, users);
+            router.setPage(USERS_PAGE);
+            router.setForward();
         } catch (ServiceException e) {
-            logger.error("Failed to delete item ID: {}", itemId, e);
+            logger.error("Error getting all users", e);
             throw new CommandException(e);
         }
 
